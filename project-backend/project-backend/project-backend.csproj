@@ -7,4 +7,9 @@
         <RootNamespace>project_backend</RootNamespace>
     </PropertyGroup>
 
+    <ItemGroup>
+      <PackageReference Include="MongoDB.Bson" Version="3.1.0" />
+      <PackageReference Include="MongoDB.Driver" Version="3.1.0" />
+    </ItemGroup>
+
 </Project>
