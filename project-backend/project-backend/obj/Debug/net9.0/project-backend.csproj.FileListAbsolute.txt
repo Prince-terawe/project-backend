@@ -96,3 +96,11 @@ C:\Users\PrinceKumar\Desktop\DotNet demo\project-backend\project-backend\project
 C:\Users\PrinceKumar\Desktop\DotNet demo\project-backend\project-backend\project-backend\obj\Debug\net9.0\project-backend.pdb
 C:\Users\PrinceKumar\Desktop\DotNet demo\project-backend\project-backend\project-backend\obj\Debug\net9.0\project-backend.genruntimeconfig.cache
 C:\Users\PrinceKumar\Desktop\DotNet demo\project-backend\project-backend\project-backend\obj\Debug\net9.0\ref\project-backend.dll
+C:\Users\PrinceKumar\Desktop\DotNet demo\project-backend\project-backend\project-backend\bin\Debug\net9.0\DnsClient.dll
+C:\Users\PrinceKumar\Desktop\DotNet demo\project-backend\project-backend\project-backend\bin\Debug\net9.0\MongoDB.Bson.dll
+C:\Users\PrinceKumar\Desktop\DotNet demo\project-backend\project-backend\project-backend\bin\Debug\net9.0\MongoDB.Driver.dll
+C:\Users\PrinceKumar\Desktop\DotNet demo\project-backend\project-backend\project-backend\bin\Debug\net9.0\SharpCompress.dll
+C:\Users\PrinceKumar\Desktop\DotNet demo\project-backend\project-backend\project-backend\bin\Debug\net9.0\Snappier.dll
+C:\Users\PrinceKumar\Desktop\DotNet demo\project-backend\project-backend\project-backend\bin\Debug\net9.0\ZstdSharp.dll
+C:\Users\PrinceKumar\Desktop\DotNet demo\project-backend\project-backend\project-backend\obj\Debug\net9.0\project-backend.csproj.AssemblyReference.cache
+C:\Users\PrinceKumar\Desktop\DotNet demo\project-backend\project-backend\project-backend\obj\Debug\net9.0\project-.A873487A.Up2Date
