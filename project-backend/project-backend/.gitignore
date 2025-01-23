@@ -1,3 +1,7 @@
 ﻿# Dependency directories
 .vs/
 packages/
+.idea/
+bin
+obj
+.env
