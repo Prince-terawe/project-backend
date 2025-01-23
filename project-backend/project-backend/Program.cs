@@ -1,7 +1,26 @@
-﻿var builder = WebApplication.CreateBuilder(args);
+﻿using DotNetEnv;
+using MongoDB.Driver;
+using project_backend.Data;
+using project_backend.Services;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Load environment variables from .env file
+Env.Load();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddSingleton<MongoDbContext>();
+
+// Register IMongoDatabase with a scoped lifetime
+builder.Services.AddScoped<IMongoDatabase>(sp =>
+{
+    var dbContext = sp.GetRequiredService<MongoDbContext>();
+    return dbContext.Users.Database; // Returns the IMongoDatabase instance
+});
+
+builder.Services.AddScoped<AuthService>();
+builder.Services.AddSingleton<JwtService>();
 
 var app = builder.Build();
 
