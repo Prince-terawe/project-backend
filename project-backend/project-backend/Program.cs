@@ -22,6 +22,16 @@ builder.Services.AddScoped<IMongoDatabase>(sp =>
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddSingleton<JwtService>();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAllOrigins", policy =>
+    {
+        policy.AllowAnyOrigin() // Allow requests from any origin
+            .AllowAnyHeader() // Allow any headers
+            .AllowAnyMethod(); // Allow any HTTP methods
+    });
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -34,6 +44,8 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseRouting();
+
+app.UseCors("AllowAllOrigins");
 
 app.UseAuthorization();
 

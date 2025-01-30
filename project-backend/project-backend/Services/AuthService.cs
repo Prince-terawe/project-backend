@@ -36,5 +36,21 @@ namespace project_backend.Services
             await _users.UpdateOneAsync(u => u.Id == userId, updateDefinition);
         }
 
+        public async Task<object> GetUserProfileAsync(string userId)
+        {
+            var user = await _users.Find(u => u.Id == userId).FirstOrDefaultAsync();
+            if (user == null)
+                return null;
+
+            // Return all user data except the password
+            return new
+            {
+                // user.Id,
+                user.Email,
+                user.Name,
+                // Add other fields you want to return
+            };
+        }
+
     }
 }
