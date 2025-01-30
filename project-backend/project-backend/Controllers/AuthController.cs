@@ -1,5 +1,9 @@
-﻿using Microsoft.AspNetCore.Identity.Data;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using project_backend.Data;
 using project_backend.Models;
 using project_backend.Services;
@@ -93,6 +97,63 @@ namespace project_backend.Controllers
 
                 return StatusCode(500, new { message = "An error occurred while resetting the password. Please try again later." });
             }
+        }
+
+        [HttpPost("validate-token")]
+        public IActionResult ValidateToken([FromBody] TokenRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.Token))
+                return BadRequest(new { message = "Token is required" });
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("JWT_SECRET_KEY") ?? throw new InvalidOperationException()));
+            var tokenHandler = new JwtSecurityTokenHandler();
+
+            try
+            {
+                tokenHandler.ValidateToken(request.Token, new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = key,
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ClockSkew = TimeSpan.Zero
+                }, out SecurityToken validatedToken);
+
+                var jwtToken = (JwtSecurityToken)validatedToken;
+                var userId = jwtToken.Claims.First(claim => claim.Type == ClaimTypes.NameIdentifier).Value;
+
+                return Ok(new { valid = true, userId });
+            }
+            catch (SecurityTokenExpiredException)
+            {
+                return Unauthorized(new { valid = false, message = "Token has expired" });
+            }
+            catch (Exception)
+            {
+                return Unauthorized(new { valid = false, message = "Invalid token" });
+            }
+        }
+
+        [HttpGet("profile/{userId}")]
+        public async Task<IActionResult> GetUserProfile(string userId)
+        {
+            try
+            {
+                var userProfile = await _authService.GetUserProfileAsync(userId);
+                if (userProfile == null)
+                    return NotFound(new { message = "User not found" });
+
+                return Ok(userProfile);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error occurred while fetching user profile: {ex.Message}");
+                return StatusCode(500, new { message = "An error occurred while fetching the user profile. Please try again later." });
+            }
+        }
+        public class TokenRequest
+        {
+            public string? Token { get; set; }
         }
     }
 }
