@@ -23,11 +23,6 @@ namespace project_backend.Services
             return await _users.Find(u => u.Email == email).FirstOrDefaultAsync();
         }
 
-        public async Task<User> FindUserByIdAsync(string id)
-        {
-            return await _users.Find(u => u.Id == id).FirstOrDefaultAsync();
-        }
-
         public async Task UpdatePasswordAsync(string userId, string newPassword)
         {
 

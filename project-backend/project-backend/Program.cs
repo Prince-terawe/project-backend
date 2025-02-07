@@ -21,6 +21,7 @@ builder.Services.AddScoped<IMongoDatabase>(sp =>
 
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddSingleton<JwtService>();
+builder.Services.AddSingleton<UserService>();
 
 builder.Services.AddCors(options =>
 {
