@@ -1,6 +1,7 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
@@ -20,12 +21,16 @@ namespace project_backend.Controllers
         private readonly AuthService _authService;
         private readonly JwtService _jwtService;
         // private readonly MongoDbContext _context;
+        private readonly UserLogService _userLogService;
+        private readonly UserService _userService;
 
-        public AuthController(AuthService authService, JwtService jwtService, MongoDbContext mongoContext)
+        public AuthController(AuthService authService, JwtService jwtService, MongoDbContext mongoContext, UserLogService userLogService, UserService userService)
         {
             _authService = authService;
             _jwtService = jwtService;
             // _context = mongoContext;
+            _userLogService = userLogService;
+            _userService = userService;
         }
 
         [HttpPost("signup")]
@@ -43,8 +48,6 @@ namespace project_backend.Controllers
             }
             catch (Exception e)
             {
-                Console.WriteLine($"Error occurred during signup: {e.Message}");
-
                 return StatusCode(500, new { message = "An error occurred while creating the user. Please try again later." });
 
             }
@@ -65,16 +68,66 @@ namespace project_backend.Controllers
                 }
 
                 var token = _jwtService.GenerateToken(user.Id, user.Email);
+                var expireTime = DateTime.UtcNow.AddHours(1);
+                var userLog = new UserLog()
+                {
+                    LoginCount = (user.UserLog?.LoginCount ?? 0) + 1,
+                    LastLogin = DateTime.UtcNow,
+                    SessionExpire = expireTime,
+                    SessionDuration = (user.UserLog?.SessionDuration ?? 0),
+                };
+                await _userLogService.UpdateLogAsync(user.Id, userLog);
                 return Ok(new { token });
             }
             catch (Exception e)
             {
-                Console.WriteLine($"Error occurred during login: {e.Message}");
-
                 return StatusCode(500, new { message = "An error occurred while processing your login request. Please try again later." });
             }
 
         }
+
+        [HttpPut("logout")]
+        [Authorize]
+        public async Task<IActionResult> Logout()
+        {
+            try
+            {
+                // Retrieve the user id from the JWT claims populated by the middleware.
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized(new { message = "Invalid token or user not found." });
+                }
+
+                // Retrieve and update the user log as needed
+                var userLog = await _userLogService.GetUserLogAsync(userId);
+                if (userLog == null)
+                {
+                    return NotFound(new { message = "User log not found" });
+                }
+
+                // Calculate session duration
+                var logoutTime = DateTime.UtcNow;
+                var sessionDuration = (logoutTime - userLog.LastLogin).TotalMinutes;
+
+                var log = new UserLog()
+                {
+                    LoginCount = userLog.LoginCount,
+                    LastLogin = userLog.LastLogin,
+                    SessionExpire = userLog.SessionExpire,
+                    SessionDuration = userLog.SessionDuration+ (int)sessionDuration,
+                };
+
+                await _userLogService.UpdateLogAsync(userId, log);
+
+                return Ok(new { message = "Logged out successfully"});
+            }
+            catch (Exception e)
+            {
+                return StatusCode(500, new { message = "An error occurred while logging out. Please try again later." });
+            }
+        }
+
 
         [HttpPut("reset-password")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest resetPasswordRequest)
@@ -93,8 +146,6 @@ namespace project_backend.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error occurred during password reset: {ex.Message}");
-
                 return StatusCode(500, new { message = "An error occurred while resetting the password. Please try again later." });
             }
         }
@@ -122,11 +173,20 @@ namespace project_backend.Controllers
                 var jwtToken = (JwtSecurityToken)validatedToken;
                 var userId = jwtToken.Claims.First(claim => claim.Type == ClaimTypes.NameIdentifier).Value;
 
-                return Ok(new { valid = true, userId });
+                // Calculate session duration based on token expiration
+                var expirationTime = jwtToken.ValidTo;
+                var sessionDuration = (expirationTime - DateTime.UtcNow).TotalMinutes;
+
+                return Ok(new { valid = true, userId, sessionDuration });
             }
             catch (SecurityTokenExpiredException)
             {
-                return Unauthorized(new { valid = false, message = "Token has expired" });
+                // Calculate session duration based on token expiration time
+                var jwtToken = tokenHandler.ReadJwtToken(request.Token);
+                var expirationTime = jwtToken.ValidTo;
+                var sessionDuration = (expirationTime - jwtToken.ValidFrom).TotalMinutes;
+
+                return Unauthorized(new { valid = false, message = "Token has expired", sessionDuration });
             }
             catch (Exception)
             {
@@ -147,7 +207,6 @@ namespace project_backend.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error occurred while fetching user profile: {ex.Message}");
                 return StatusCode(500, new { message = "An error occurred while fetching the user profile. Please try again later." });
             }
         }
