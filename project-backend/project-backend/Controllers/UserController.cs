@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using project_backend.Models;
 using project_backend.Services;
 
@@ -16,6 +17,7 @@ namespace project_backend.Controllers
         }
 
         [HttpGet("allUsers")]
+        [Authorize]
         public async Task<IActionResult> GetUsers([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
             try
@@ -50,6 +52,7 @@ namespace project_backend.Controllers
         }
 
         [HttpGet("getUser/{id}")]
+        [Authorize]
         public async Task<IActionResult> GetUser(string id)
         {
             try
@@ -64,7 +67,8 @@ namespace project_backend.Controllers
                 {
                     Id = user.Id,
                     Name = user.Name,
-                    Email = user.Email
+                    Email = user.Email,
+                    UserLog= user.UserLog
                 });
             }
             catch (Exception ex)

@@ -1,4 +1,7 @@
-﻿using DotNetEnv;
+﻿using System.Text;
+using DotNetEnv;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
 using project_backend.Data;
 using project_backend.Services;
@@ -22,6 +25,29 @@ builder.Services.AddScoped<IMongoDatabase>(sp =>
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddSingleton<JwtService>();
 builder.Services.AddSingleton<UserService>();
+builder.Services.AddSingleton<UserLogService>();
+
+// Configure JWT authentication
+var jwtKey = Environment.GetEnvironmentVariable("JWT_SECRET_KEY") ?? throw new InvalidOperationException("JWT_SECRET_KEY is not set in the environment variables.");
+var key = Encoding.ASCII.GetBytes(jwtKey);
+
+builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(key),
+            ValidateIssuer = false, // Set to true if you want to validate the issuer
+            ValidateAudience = false, // Set to true if you want to validate the audience
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero
+        };
+    });
 
 builder.Services.AddCors(options =>
 {

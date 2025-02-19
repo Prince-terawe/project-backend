@@ -40,9 +40,10 @@ namespace project_backend.Services
             // Return all user data except the password
             return new
             {
-                // user.Id,
+                user.Id,
                 user.Email,
                 user.Name,
+                user.UserLog,
                 // Add other fields you want to return
             };
         }
